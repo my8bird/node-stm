@@ -1,5 +1,19 @@
 this is not ready to use yet
 
+# Why do I need this?
+While it is true that Javascript is a single threaded event oriented system there are times you may want to ensure your updates are consistent with the data model.  For example:
+
+```javascript
+function purchaseItem(itemId) {
+   // Make sure we have an item to sell
+   if (this._items[itemId].length === 0) {
+      throw "whoops, can not sell what I don't have."
+   }
+   
+}
+```
+
+
 # Usage
 ```javascript
 // Create a place to share data
