@@ -26,8 +26,8 @@ describe('STM', function() {
     });
   });
 
-  describe('Updating', function() {
-    it('new key', function() {
+  describe('Transactions', function() {
+    it('adding a key', function() {
        // Given a STM with no data
        data = new STM();
 
@@ -40,7 +40,7 @@ describe('STM', function() {
        expect(data._read()).to.deep.equal({item1: 1});
     });
 
-    it('new key (nested)', function() {
+    it('adding a key (nested)', function() {
        // Given a STM with no data
        data = new STM();
 
@@ -53,7 +53,7 @@ describe('STM', function() {
        expect(data._read()).to.deep.equal({item1: {nested: 1}});
     });
 
-    it('existing key', function() {
+    it('updating an existing key', function() {
        // Given a STM with some data
        data = new STM({item1: 1});
 
@@ -66,7 +66,7 @@ describe('STM', function() {
        expect(data._read()).to.deep.equal({item1: 2});
     });
 
-    it('existing key (nested)', function() {
+    it('updating an existing key (nested)', function() {
        // Given a STM with some data
        data = new STM({item1: {nested: 1}});
 
@@ -77,6 +77,36 @@ describe('STM', function() {
 
        // Then the new data is stored
        expect(data._read()).to.deep.equal({item1: {nested: 2}});
+    });
+
+    it('should allow removing values', function() {
+       // Given some data
+       data = new STM({item1: 1});
+
+       // When in a transaction
+       data.update(function(trans) {
+           trans.remove('item1');
+       });
+
+       // Then the value should be lost
+       expect(data._read()).to.deep.equal({});
+    });
+
+    it('should allow reading values during transaction', function() {
+       // Given an stm object with data
+       data = new STM({item: 1, item2: 2, item3: 3});
+       // When the transaction is active
+       data.update(function(trans) {
+          // And a value has been changed
+          trans.set('item1', '1');
+
+          // And a value has been removed
+          trans.remove('item3');
+
+          expect(trans.get('item1')).to.equal('1');
+          expect(trans.get('item2')).to.equal(2);
+          expect(trans.get('item3')).to.equal(undefined);
+       });
     });
 
   });

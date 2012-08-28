@@ -42,7 +42,12 @@ var STM = module.exports = util.klass(
  
       _.all(trans.updates, function(update) {
          util.setAtPath(this._data, update.path, function(obj, key) {
-             obj[key] = update.value;
+            if (update.action === 'set') {
+               obj[key] = update.value;
+            }
+            else {
+               delete obj[key];
+            }
          });
       }, this);
    },
@@ -52,15 +57,26 @@ var STM = module.exports = util.klass(
    While this is much faster then `clone` it should not be used
    because it breaks the contracts STM has setup for data usage.
    */
-   _read: function(path) {
+   _read: function(path, version) {
+      // Determine which version of the data to use
+      var data = version === undefined ? this._data : this._activeVersions[version][1];
+
+      // If no path was sent then send the full thing back
+      // This could be an error condition but I am feeling nice.
       if (path === undefined) {
-         return this._data;
+         return data;
       }
 
-      path = typeof(path) === 'Array' ? path : [path];
-      return path.map(function(part) {
-         return util.dataAtPath(this._data, part);
-      });
+      // if the user asked for several things return a list of them
+      // otherwise, send back the single value.
+      if (typeof(path) === 'Array') {
+         return path.map(function(part) {
+            return util.dataAtPath(data, part);
+         });
+      }
+      else {
+         return util.dataAtPath(data, path);
+      }
    },
 
    _addTransaction: function() {
